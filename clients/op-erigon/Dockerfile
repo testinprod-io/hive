@@ -14,4 +14,6 @@ RUN /usr/local/bin/erigon --version | sed -e 's/erigon version \(.*\)/\1/' > /ve
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+EXPOSE 8545 8546 8551 30303 30303/udp
+
 ENTRYPOINT ["/entrypoint.sh"]

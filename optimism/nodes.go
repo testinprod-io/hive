@@ -33,7 +33,7 @@ func (e *ELNode) HttpRpcEndpoint() string {
 }
 
 func (e *ELNode) EngineEndpoint() string {
-	return fmt.Sprintf("ws://%v:%d", e.IP, EnginePort)
+	return fmt.Sprintf("http://%v:%d", e.IP, EnginePort)
 }
 
 func (e *ELNode) WsRpcEndpoint() string {

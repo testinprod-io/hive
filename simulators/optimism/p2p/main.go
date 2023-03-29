@@ -105,7 +105,7 @@ func txForwardingTest(t *hivesim.T) {
 	defer cancel()
 	_, isPending, err := seqClient.TransactionByHash(ctx, tx.Hash())
 	if err != nil {
-		t.Fatal("transaction did not propagate")
+		t.Fatal("transaction did not propagate", "err", err)
 	}
 	t.Logf("found transaction on sequencer, isPending: %v", isPending)
 
@@ -243,8 +243,8 @@ waitLoop:
 					ChainID:   optimism.L2ChainIDBig,
 					Nonce:     nonce,
 					Gas:       75000,
-					GasTipCap: big.NewInt(1),
-					GasFeeCap: big.NewInt(2),
+					GasTipCap: big.NewInt(100000000),
+					GasFeeCap: big.NewInt(200000000),
 					Value:     big.NewInt(0.0001 * params.Ether),
 				})
 				tx, err = d.L2Vault.SignTransaction(sender, tx)
