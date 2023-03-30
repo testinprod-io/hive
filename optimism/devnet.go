@@ -294,7 +294,7 @@ func (d *Devnet) AddOpBatcher(eth1Index int, l2EngIndex int, opNodeIndex int, op
 
 	defaultSettings := HiveUnpackParams{
 		opbf.L1EthRpcFlag.EnvVar:                  eth1Node.WsRpcEndpoint(),
-		opbf.L2EthRpcFlag.EnvVar:                  l2Engine.WsRpcEndpoint(),
+		opbf.L2EthRpcFlag.EnvVar:                  l2Engine.HttpRpcEndpoint(),
 		opbf.RollupRpcFlag.EnvVar:                 opNode.HttpRpcEndpoint(),
 		opbf.TargetL1TxSizeBytesFlag.EnvVar:       "624",
 		opbf.MaxL1TxSizeBytesFlag.EnvVar:          "120000",

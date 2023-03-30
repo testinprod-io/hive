@@ -1,5 +1,13 @@
 # hive - Ethereum end-to-end test harness
 
+**THIS VERSION IS ONLY FOR OP-ERIGON CI TEST**
+
+Following test cases are disabled for now:
+- `l1ops/erc20RoundtripTest`
+- `l1ops/simpleWithdrawalTest`
+
+---
+
 Hive is a system for running integration tests against Ethereum clients.
 
 Ethereum Foundation maintains two public Hive instances to check for consensus, p2p and

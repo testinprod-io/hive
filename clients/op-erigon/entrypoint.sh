@@ -31,6 +31,14 @@ socat tcp-l:8546,fork,reuseaddr tcp:127.0.0.1:8545 &
 # avoid race
 sleep 1
 
+# We check for env variables that may not be bound so we need to disable `set -u` for this section.
+EXTRA_FLAGS=""
+set +u
+if [ "$HIVE_OP_GETH_SEQUENCER_HTTP" != "" ]; then
+    EXTRA_FLAGS="$EXTRA_FLAGS --rollup.sequencerhttp $HIVE_OP_GETH_SEQUENCER_HTTP"
+fi
+set -u
+
 /usr/local/bin/erigon \
     --datadir="$ERIGON_DATA_DIR" \
     --log.console.verbosity="$VERBOSITY" \
@@ -48,4 +56,6 @@ sleep 1
     --nodiscover \
     --no-downloader \
     --maxpeers=0 \
-    --miner.gaslimit=$GAS_LIMIT
+    --miner.gaslimit=$GAS_LIMIT \
+    $EXTRA_FLAGS \
+    "$@"
