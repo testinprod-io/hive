@@ -186,12 +186,12 @@ func (d *Devnet) AddOpNode(eth1Index int, l2EngIndex int, sequencer bool, opts .
 		seqStr = "true"
 	}
 	defaultSettings := HiveUnpackParams{
-		opnf.L1NodeAddr.EnvVar:           eth1Node.HttpRpcEndpoint(),
+		opnf.L1NodeAddr.EnvVar:           eth1Node.WsRpcEndpoint(),
 		opnf.L2EngineAddr.EnvVar:         l2Engine.EngineEndpoint(),
 		opnf.RollupConfig.EnvVar:         "/rollup_config.json",
 		opnf.RPCListenAddr.EnvVar:        "0.0.0.0",
 		opnf.RPCListenPort.EnvVar:        fmt.Sprintf("%d", RollupRPCPort),
-		opnf.L1TrustRPC.EnvVar:           "true",
+		opnf.L1TrustRPC.EnvVar:           "false",
 		opnf.L2EngineJWTSecret.EnvVar:    DefaultJWTPath,
 		opnf.LogLevelFlag.EnvVar:         "debug",
 		opnf.SequencerEnabledFlag.EnvVar: seqStr,
@@ -255,7 +255,7 @@ func (d *Devnet) AddOpProposer(eth1Index int, l2EngIndex int, opNodeIndex int, o
 	opNode := d.GetOpNode(opNodeIndex)
 
 	defaultSettings := HiveUnpackParams{
-		oppf.L1EthRpcFlag.EnvVar:                  eth1Node.HttpRpcEndpoint(),
+		oppf.L1EthRpcFlag.EnvVar:                  eth1Node.WsRpcEndpoint(),
 		oppf.RollupRpcFlag.EnvVar:                 opNode.HttpRpcEndpoint(),
 		oppf.L2OOAddressFlag.EnvVar:               d.Deployments.L2OutputOracleProxy.String(),
 		oppf.PollIntervalFlag.EnvVar:              "10s",
@@ -293,7 +293,7 @@ func (d *Devnet) AddOpBatcher(eth1Index int, l2EngIndex int, opNodeIndex int, op
 	l2Engine := d.GetOpL2Engine(l2EngIndex)
 
 	defaultSettings := HiveUnpackParams{
-		opbf.L1EthRpcFlag.EnvVar:                  eth1Node.HttpRpcEndpoint(),
+		opbf.L1EthRpcFlag.EnvVar:                  eth1Node.WsRpcEndpoint(),
 		opbf.L2EthRpcFlag.EnvVar:                  l2Engine.HttpRpcEndpoint(),
 		opbf.RollupRpcFlag.EnvVar:                 opNode.HttpRpcEndpoint(),
 		opbf.TargetL1TxSizeBytesFlag.EnvVar:       "624",

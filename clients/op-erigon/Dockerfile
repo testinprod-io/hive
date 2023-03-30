@@ -1,4 +1,4 @@
-FROM op-erigon/v1.0
+FROM op-erigon:latest
 # If image not on dockerhub, clone https://github.com/testinprod-io/erigon
 # and build locally. Run `docker build . op-erigon/v1.2` at root of erigon
 

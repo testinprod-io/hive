@@ -243,8 +243,8 @@ waitLoop:
 					ChainID:   optimism.L2ChainIDBig,
 					Nonce:     nonce,
 					Gas:       75000,
-					GasTipCap: big.NewInt(100000000),
-					GasFeeCap: big.NewInt(200000000),
+					GasTipCap: big.NewInt(1),
+					GasFeeCap: big.NewInt(10), // minimum GasFeeCap of op-erigon is 7
 					Value:     big.NewInt(0.0001 * params.Ether),
 				})
 				tx, err = d.L2Vault.SignTransaction(sender, tx)
