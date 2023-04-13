@@ -86,6 +86,28 @@ func (b *ContainerBackend) CreateContainer(ctx context.Context, imageName string
 		},
 	}
 
+	if imageName == "hive/simulators/optimism/rpc:latest" {
+		createOpts = docker.CreateContainerOptions{
+			Context: ctx,
+			Config: &docker.Config{
+				Image:        imageName,
+				Env:          vars,
+				SecurityOpts: []string{"seccomp:unconfined"},
+				ExposedPorts: map[docker.Port]struct{}{
+					"12345/tcp": {},
+				},
+			},
+			HostConfig: &docker.HostConfig{
+				CapAdd: []string{"SYS_PTRACE"},
+				PortBindings: map[docker.Port][]docker.PortBinding{
+					"12345/tcp": []docker.PortBinding{{
+						HostPort: "12345",
+					}},
+				},
+			},
+		}
+	}
+
 	if opt.Input != nil {
 		// Pre-announce that stdin will be attached. The stdin attachment
 		// will fail silently if this is not set.

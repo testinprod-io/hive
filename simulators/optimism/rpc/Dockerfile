@@ -9,11 +9,19 @@ ADD ./simulators/optimism/rpc/hive.go.work /source/go.work
 ADD ./optimism /source/optimism
 ADD ./simulators/optimism/rpc /source/rpc
 
+ENV CGO_ENABLED=1
+
 WORKDIR /source/rpc
-RUN go build -v .
+RUN go build -gcflags="all=-N -l" -v .
+
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+EXPOSE 12345
+
+ENTRYPOINT ["/go/bin/dlv", "--listen=:12345", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./rpc"]
 
 # Build the simulator run container.
-FROM alpine:latest
-
-COPY --from=builder /source/rpc/rpc .
-ENTRYPOINT ["./rpc"]
+#FROM alpine:latest
+#
+#COPY --from=builder /source/rpc/rpc .
+#ENTRYPOINT ["./rpc"]
