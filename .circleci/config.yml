@@ -41,7 +41,7 @@ jobs:
             -sim=<<parameters.sim>> \
             -sim.loglevel=5 \
             -docker.pull=true \
-            -client=go-ethereum,op-geth_optimism-history,op-proposer_develop,op-batcher_develop,op-node_develop |& tee /tmp/build/hive.log || echo "failed."
+            -client=go-ethereum,op-erigon,op-proposer_develop,op-batcher_develop,op-node_develop |& tee /tmp/build/hive.log || echo "failed."
       - run:
           command: |
             tar -cvf /tmp/workspace.tgz -C /home/circleci/project /home/circleci/project/workspace
@@ -52,11 +52,11 @@ jobs:
       - run:
           command: "! grep 'pass.*=false' /tmp/build/hive.log"
       - slack/notify:
-          channel: C03N11M0BBN
+          channel: C052TFE9P8X
           event: fail
           template: basic_fail_1
       - slack/notify:
-          channel: C03N11M0BBN
+          channel: C052TFE9P8X
           event: pass
           template: basic_success_1
 
@@ -91,17 +91,17 @@ workflows:
       - run-hive-sim:
           name: hive-test-l1ops
           requires: ["build"]
-          context: slack
+          context: slack-hive
           sim: optimism/l1ops
       - run-hive-sim:
           name: hive-test-p2p
           requires: [ "build" ]
-          context: slack
+          context: slack-hive
           sim: optimism/p2p
       - run-hive-sim:
           name: hive-test-rpc
           requires: [ "build" ]
-          context: slack
+          context: slack-hive
           sim: optimism/rpc
   scheduled:
     triggers:
@@ -110,9 +110,9 @@ workflows:
           cron: "0 0,4,8,12,16 * * *"
           filters:
             branches:
-              only: [ "optimism" ]
+              only: [ "op-erigon" ]
     jobs:
       - build
       - run-hive-sim:
           requires: ["build"]
-          context: slack
+          context: slack-hive
