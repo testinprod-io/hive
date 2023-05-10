@@ -43,8 +43,8 @@ set -u
   --datadir="$ERIGON_DATA_DIR" \
   --log.console.verbosity="$VERBOSITY" \
   --http \
-	--http.corsdomain="*" \
-	--http.vhosts="*" \
+  --http.corsdomain="*" \
+  --http.vhosts="*" \
   --http.addr=0.0.0.0 \
   --http.port=8545 \
   --http.api=admin,debug,eth,net,txpool,web3 \
