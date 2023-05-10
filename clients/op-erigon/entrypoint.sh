@@ -40,22 +40,22 @@ fi
 set -u
 
 /usr/local/bin/erigon \
-    --datadir="$ERIGON_DATA_DIR" \
-    --log.console.verbosity="$VERBOSITY" \
-    --http \
-	--http.corsdomain="*" \
-	--http.vhosts="*" \
-    --http.addr=0.0.0.0 \
-    --http.port=8545 \
-    --http.api=admin,debug,eth,net,txpool,web3 \
-    --externalcl \
-    --ws \
-    --authrpc.jwtsecret="/hive/input/jwt-secret.txt" \
-    --authrpc.port=8551 \
-    --authrpc.addr=0.0.0.0 \
-    --nodiscover \
-    --no-downloader \
-    --maxpeers=0 \
-    --miner.gaslimit=$GAS_LIMIT \
-    $EXTRA_FLAGS \
-    "$@"
+  --datadir="$ERIGON_DATA_DIR" \
+  --log.console.verbosity="$VERBOSITY" \
+  --http \
+  --http.corsdomain="*" \
+  --http.vhosts="*" \
+  --http.addr=0.0.0.0 \
+  --http.port=8545 \
+  --http.api=admin,debug,eth,net,txpool,web3 \
+  --ws \
+  --authrpc.jwtsecret="/hive/input/jwt-secret.txt" \
+  --authrpc.port=8551 \
+  --authrpc.addr=0.0.0.0 \
+  --nodiscover \
+  --no-downloader \
+  --maxpeers=0 \
+  --miner.gaslimit=$GAS_LIMIT \
+  --networkid=$CHAIN_ID \
+  $EXTRA_FLAGS \
+  "$@"
