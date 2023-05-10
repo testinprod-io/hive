@@ -56,5 +56,6 @@ set -u
   --no-downloader \
   --maxpeers=0 \
   --miner.gaslimit=$GAS_LIMIT \
+  --networkid=$CHAIN_ID \
   $EXTRA_FLAGS \
   "$@"
