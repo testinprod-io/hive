@@ -54,7 +54,8 @@ set -u
   --authrpc.addr=0.0.0.0 \
   --nodiscover \
   --no-downloader \
-  --maxpeers=0 \
+  --maxpeers=50 \
+  --nat extip:`hostname -i` \
   --miner.gaslimit=$GAS_LIMIT \
   --networkid=$CHAIN_ID \
   $EXTRA_FLAGS \
