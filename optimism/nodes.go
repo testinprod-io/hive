@@ -80,7 +80,6 @@ func (e *OpL2EngineExtended) NodeInfo(ctx context.Context) (*gethp2p.NodeInfo, e
 	var output *gethp2p.NodeInfo
 	err := e.RPC().CallContext(ctx, &output, "admin_nodeInfo")
 	return output, err
-
 }
 
 func (e *OpL2EngineExtended) Peers(ctx context.Context) (*gethp2p.PeerInfo, error) {
