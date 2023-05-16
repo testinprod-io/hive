@@ -103,3 +103,35 @@ func WaitReceipt(ctx context.Context, client *ethclient.Client, hash common.Hash
 		return receipt, nil
 	}
 }
+
+func WaitPendingTransactionFromTxPool(ctx context.Context, client *OpL2EngineExtended, sender common.Address, tx *types.Transaction) (bool, error) {
+	nonce := fmt.Sprintf("%d", tx.Nonce())
+	checkInclusion := func(pendingTxs map[string]*RPCTransactionHash) bool {
+		if len(pendingTxs) == 0 {
+			return false
+		} else if rpcTxHash, ok := pendingTxs[nonce]; !ok {
+			return false
+		} else if !bytes.Equal(rpcTxHash.Hash.Bytes(), tx.Hash().Bytes()) {
+			return false
+		}
+		return true
+	}
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		txpoolcontent, err := client.TxPoolContent(ctx)
+		if err != nil {
+			return false, err
+		}
+		pendingTxs := txpoolcontent["pending"][sender.String()]
+		if !checkInclusion(pendingTxs) {
+			select {
+			case <-ctx.Done():
+				return false, ctx.Err()
+			case <-ticker.C:
+				continue
+			}
+		}
+		return true, nil
+	}
+}
