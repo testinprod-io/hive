@@ -38,9 +38,84 @@ func main() {
 		Description: `This test verifies that tx forwarding works`,
 		Run:         func(t *hivesim.T) { txForwardingTest(t) },
 	})
+	suite.Add(&hivesim.TestSpec{
+		Name:        "tx gossiping",
+		Description: `This test verifies that tx gossiping works`,
+		Run:         func(t *hivesim.T) { txGossipingTest(t) },
+	})
 
 	sim := hivesim.New()
 	hivesim.MustRunSuite(sim, suite)
+}
+
+// txGossipingTest verifies that a transaction submitted to a replica execution client
+// with tx gossiping enabled shows up on the sequencer tx pool.
+func txGossipingTest(t *hivesim.T) {
+	d := optimism.NewDevnet(t)
+	sender := d.L2Vault.GenerateKey()
+	receiver := d.L2Vault.GenerateKey()
+
+	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}})
+	d.AddEth1()
+	d.WaitUpEth1(0, time.Second*10)
+
+	d.AddOpL2()
+	d.AddOpNode(0, 0, false)
+	seqNode := d.GetOpL2Engine(0)
+
+	d.AddOpL2()
+	d.AddOpNode(0, 1, false)
+	verifNode := d.GetOpL2Engine(1)
+	verifClient := verifNode.EthClient()
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		d.WaitUpOpL2Engine(0, time.Second*10)
+		wg.Done()
+	}()
+	go func() {
+		d.WaitUpOpL2Engine(1, time.Second*10)
+		wg.Done()
+	}()
+
+	t.Log("waiting for nodes to come up")
+	wg.Wait()
+
+	t.Logf("peering execution clients %s with %s", seqNode.IP.String(), verifNode.IP.String())
+	seqNodeExtended := &optimism.OpL2EngineExtended{OpL2Engine: seqNode}
+	verifNodeExtended := &optimism.OpL2EngineExtended{OpL2Engine: verifNode}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	require.NoError(t, seqNodeExtended.ConnectPeer(ctx, verifNodeExtended))
+
+	baseTx := types.NewTx(&types.DynamicFeeTx{
+		ChainID:   optimism.L2ChainIDBig,
+		Nonce:     0,
+		To:        &receiver,
+		Gas:       75000,
+		GasTipCap: big.NewInt(10 * params.GWei),
+		GasFeeCap: big.NewInt(20 * params.GWei),
+		Value:     big.NewInt(0.0001 * params.Ether),
+	})
+
+	tx, err := d.L2Vault.SignTransaction(sender, baseTx)
+	require.Nil(t, err)
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	require.NoError(t, verifClient.SendTransaction(ctx, tx))
+	t.Log("sent tx to verifier, waiting for tx gossip")
+
+	<-time.After(10 * time.Second)
+
+	ctx, cancel = context.WithTimeout(context.Background(), 180*time.Second)
+	defer cancel()
+	found, err := optimism.WaitPendingTransactionFromTxPool(ctx, seqNodeExtended, sender, tx)
+	if !found {
+		t.Fatal("transaction not gossiped", "err", err)
+	}
+	t.Log("found gossiped transaction on sequencer")
 }
 
 // txForwardingTest verifies that a transaction submitted to a replica with tx forwarding enabled shows up on the sequencer.
