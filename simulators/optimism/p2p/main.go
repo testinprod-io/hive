@@ -123,7 +123,8 @@ func txGossipingTest(t *hivesim.T) {
 }
 
 // txGossipingDisableTest verifies that a transaction submitted to a replica execution client
-// with tx gossiping disabled does not show up on the sequencer tx pool.
+// with tx gossiping disabled does not show up on the sequencer tx pool. After that, submit
+// transaction to sequencer which tx gossip enabled, and test tx does not show up at replica.
 func txGossipingDisableTest(t *hivesim.T) {
 	d := optimism.NewDevnet(t)
 	sender := d.L2Vault.GenerateKey()
@@ -133,10 +134,11 @@ func txGossipingDisableTest(t *hivesim.T) {
 	d.AddEth1()
 	d.WaitUpEth1(0, time.Second*10)
 
-	d.AddOpL2()
+	d.AddOpL2(hivesim.Params{"HIVE_OP_EXEC_DISABLE_TX_GOSSIP": "false"})
 	d.AddOpNode(0, 0, false)
 
 	seqNode := d.GetOpL2Engine(0)
+	seqClient := seqNode.EthClient()
 
 	d.AddOpL2(hivesim.Params{"HIVE_OP_EXEC_DISABLE_TX_GOSSIP": "true"})
 	d.AddOpNode(0, 1, false)
@@ -165,9 +167,10 @@ func txGossipingDisableTest(t *hivesim.T) {
 	defer cancel()
 	require.NoError(t, seqNodeExtended.ConnectPeer(ctx, verifNodeExtended))
 
+	nonce := uint64(0)
 	baseTx := types.NewTx(&types.DynamicFeeTx{
 		ChainID:   optimism.L2ChainIDBig,
-		Nonce:     0,
+		Nonce:     nonce,
 		To:        &receiver,
 		Gas:       75000,
 		GasTipCap: big.NewInt(10 * params.GWei),
@@ -186,11 +189,39 @@ func txGossipingDisableTest(t *hivesim.T) {
 
 	ctx, cancel = context.WithTimeout(context.Background(), 180*time.Second)
 	defer cancel()
-	found, err := optimism.WaitPendingTransactionFromTxPool(ctx, seqNodeExtended, sender, tx)
+	found, _ := optimism.WaitPendingTransactionFromTxPool(ctx, seqNodeExtended, sender, tx)
 	if found {
 		t.Fatal("transaction gossiped")
 	}
 	t.Log("transaction not gossiped on sequencer")
+
+	nonce += 1
+	baseTx2 := types.NewTx(&types.DynamicFeeTx{
+		ChainID:   optimism.L2ChainIDBig,
+		Nonce:     nonce,
+		To:        &receiver,
+		Gas:       75000,
+		GasTipCap: big.NewInt(10 * params.GWei),
+		GasFeeCap: big.NewInt(20 * params.GWei),
+		Value:     big.NewInt(0.0001 * params.Ether),
+	})
+
+	tx2, err := d.L2Vault.SignTransaction(sender, baseTx2)
+	require.Nil(t, err)
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	require.NoError(t, seqClient.SendTransaction(ctx, tx2))
+	t.Log("sent tx to sequencer. Give some time to check tx gossiping is disabled")
+
+	<-time.After(10 * time.Second)
+
+	ctx, cancel = context.WithTimeout(context.Background(), 180*time.Second)
+	defer cancel()
+	found2, _ := optimism.WaitPendingTransactionFromTxPool(ctx, verifNodeExtended, sender, tx2)
+	if found2 {
+		t.Fatal("transaction gossiped")
+	}
+	t.Log("transaction not gossiped on validator")
 }
 
 // txForwardingTest verifies that a transaction submitted to a replica with tx forwarding enabled shows up on the sequencer.
