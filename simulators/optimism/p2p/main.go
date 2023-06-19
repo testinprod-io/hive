@@ -63,11 +63,11 @@ func txGossipingTest(t *hivesim.T) {
 	d.AddEth1()
 	d.WaitUpEth1(0, time.Second*10)
 
-	d.AddOpL2()
+	d.AddOpL2(hivesim.Params{"HIVE_OP_EXEC_DISABLE_TX_GOSSIP": "false"})
 	d.AddOpNode(0, 0, false)
 	seqNode := d.GetOpL2Engine(0)
 
-	d.AddOpL2()
+	d.AddOpL2(hivesim.Params{"HIVE_OP_EXEC_DISABLE_TX_GOSSIP": "false"})
 	d.AddOpNode(0, 1, false)
 	verifNode := d.GetOpL2Engine(1)
 	verifClient := verifNode.EthClient()
