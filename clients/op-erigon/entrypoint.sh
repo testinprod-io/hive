@@ -34,6 +34,11 @@ sleep 1
 # We check for env variables that may not be bound so we need to disable `set -u` for this section.
 EXTRA_FLAGS=""
 set +u
+if [ "$HIVE_OP_EXEC_DISABLE_TX_GOSSIP" != "" ]; then
+    EXTRA_FLAGS="$EXTRA_FLAGS --rollup.disabletxpoolgossip=$HIVE_OP_EXEC_DISABLE_TX_GOSSIP"
+else
+    EXTRA_FLAGS="$EXTRA_FLAGS --rollup.disabletxpoolgossip=true"
+fi
 if [ "$HIVE_OP_GETH_SEQUENCER_HTTP" != "" ]; then
     EXTRA_FLAGS="$EXTRA_FLAGS --rollup.sequencerhttp $HIVE_OP_GETH_SEQUENCER_HTTP"
 fi
