@@ -39,14 +39,9 @@ func simpleWithdrawalTest(t *hivesim.T, env *optimism.TestEnv) {
 	require.NoError(t, err)
 	require.Equal(t, initReceipt.Status, types.ReceiptStatusSuccessful)
 
-	finBlockNum, err := withdrawals.WaitForFinalizationPeriod(
-		env.TimeoutCtx(5*time.Minute),
-		l1,
-		env.Devnet.Deployments.OptimismPortalProxy,
-		initReceipt.BlockNumber,
-	)
+	proofBlockNum, err := withdrawals.WaitForOutputRootPublished(env.TimeoutCtx(5*time.Minute), l1, env.Devnet.Deployments.OptimismPortalProxy, initReceipt.BlockNumber)
 	require.NoError(t, err)
-	finHeader, err := l2.HeaderByNumber(env.Ctx(), big.NewInt(int64(finBlockNum)))
+	finHeader, err := l2.HeaderByNumber(env.Ctx(), big.NewInt(int64(proofBlockNum)))
 	require.NoError(t, err)
 
 	proofClient := gethclient.New(env.Devnet.GetOpL2Engine(0).RPC())
@@ -88,11 +83,11 @@ func simpleWithdrawalTest(t *hivesim.T, env *optimism.TestEnv) {
 	require.Equal(t, types.ReceiptStatusSuccessful, proveReceipt.Status)
 
 	// Await finalization period
-	_, err = withdrawals.WaitForFinalizationPeriod(
+	err = withdrawals.WaitForFinalizationPeriod(
 		env.TimeoutCtx(5*time.Minute),
 		l1,
 		env.Devnet.Deployments.OptimismPortalProxy,
-		finHeader.Number,
+		proveReceipt.BlockNumber,
 	)
 	require.NoError(t, err)
 
