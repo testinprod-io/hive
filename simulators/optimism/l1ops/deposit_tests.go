@@ -220,17 +220,12 @@ func erc20RoundtripTest(t *hivesim.T, env *optimism.TestEnv) {
 	receipt, err = optimism.WaitReceiptOK(env.TimeoutCtx(30*time.Second), l2, tx.Hash())
 	require.NoError(t, err)
 
-	// Await finalization period
-	finBlockNum, err := withdrawals.WaitForFinalizationPeriod(
-		env.TimeoutCtx(5*time.Minute),
-		l1,
-		env.Devnet.Deployments.OptimismPortalProxy,
-		receipt.BlockNumber,
-	)
+	// Wait for output root to be published
+	outputBlockNum, err := withdrawals.WaitForOutputRootPublished(env.TimeoutCtx(5*time.Minute), l1, env.Devnet.Deployments.OptimismPortalProxy, receipt.BlockNumber)
 	require.NoError(t, err)
 
 	// Get the last block number
-	finHeader, err := l2.HeaderByNumber(env.Ctx(), big.NewInt(int64(finBlockNum)))
+	finHeader, err := l2.HeaderByNumber(env.Ctx(), big.NewInt(int64(outputBlockNum)))
 	require.NoError(t, err)
 
 	// Get withdrawal parameters
@@ -258,15 +253,15 @@ func erc20RoundtripTest(t *hivesim.T, env *optimism.TestEnv) {
 		wParams.WithdrawalProof,
 	)
 	require.NoError(t, err)
-	_, err = optimism.WaitReceiptOK(env.TimeoutCtx(time.Minute), l1, proveTx.Hash())
+	proveReceipt, err := optimism.WaitReceiptOK(env.TimeoutCtx(time.Minute), l1, proveTx.Hash())
 	require.NoError(t, err)
 
 	// Await finalization period
-	_, err = withdrawals.WaitForFinalizationPeriod(
+	err = withdrawals.WaitForFinalizationPeriod(
 		env.TimeoutCtx(5*time.Minute),
 		l1,
 		env.Devnet.Deployments.OptimismPortalProxy,
-		receipt.BlockNumber,
+		proveReceipt.BlockNumber,
 	)
 	require.NoError(t, err)
 

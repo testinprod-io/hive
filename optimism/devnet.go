@@ -183,20 +183,20 @@ func (d *Devnet) AddOpNode(eth1Index int, l2EngIndex int, sequencer bool, opts .
 		seqStr = "true"
 	}
 	defaultSettings := HiveUnpackParams{
-		opnf.L1NodeAddr.EnvVar:           eth1Node.WsRpcEndpoint(),
-		opnf.L2EngineAddr.EnvVar:         l2Engine.EngineEndpoint(),
-		opnf.RollupConfig.EnvVar:         "/rollup_config.json",
-		opnf.RPCListenAddr.EnvVar:        "0.0.0.0",
-		opnf.RPCListenPort.EnvVar:        fmt.Sprintf("%d", RollupRPCPort),
-		opnf.L1TrustRPC.EnvVar:           "false",
-		opnf.L2EngineJWTSecret.EnvVar:    DefaultJWTPath,
-		opnf.LogLevelFlag.EnvVar:         "debug",
-		opnf.SequencerEnabledFlag.EnvVar: seqStr,
-		opnf.SequencerL1Confs.EnvVar:     "0",
-		opnf.VerifierL1Confs.EnvVar:      "0",
-		opnf.P2PPrivPath.EnvVar:          DefaultP2PPrivPath,
-		opnf.AdvertiseTCPPort.EnvVar:     strconv.Itoa(OpnodeP2PPort),
-		opnf.ListenTCPPort.EnvVar:        strconv.Itoa(OpnodeP2PPort),
+		opnf.L1NodeAddr.EnvVars[0]:           eth1Node.WsRpcEndpoint(),
+		opnf.L2EngineAddr.EnvVars[0]:         l2Engine.EngineEndpoint(),
+		opnf.RollupConfig.EnvVars[0]:         "/rollup_config.json",
+		opnf.RPCListenAddr.EnvVars[0]:        "0.0.0.0",
+		opnf.RPCListenPort.EnvVars[0]:        fmt.Sprintf("%d", RollupRPCPort),
+		opnf.L1TrustRPC.EnvVars[0]:           "false",
+		opnf.L2EngineJWTSecret.EnvVars[0]:    DefaultJWTPath,
+		"OP_NODE_LOG_LEVEL":                  "debug",
+		opnf.SequencerEnabledFlag.EnvVars[0]: seqStr,
+		opnf.SequencerL1Confs.EnvVars[0]:     "0",
+		opnf.VerifierL1Confs.EnvVars[0]:      "0",
+		opnf.P2PPrivPath.EnvVars[0]:          DefaultP2PPrivPath,
+		opnf.AdvertiseTCPPort.EnvVars[0]:     strconv.Itoa(OpnodeP2PPort),
+		opnf.ListenTCPPort.EnvVars[0]:        strconv.Itoa(OpnodeP2PPort),
 	}
 	input := []hivesim.StartOption{defaultSettings.Params()}
 
@@ -216,7 +216,7 @@ func (d *Devnet) AddOpNode(eth1Index int, l2EngIndex int, sequencer bool, opts .
 	input = append(input, StringFile(DefaultP2PPrivPath, hex.EncodeToString(EncodePrivKey(p2pKey))))
 	if sequencer {
 		input = append(input,
-			HiveUnpackParams{opnf.SequencerP2PKeyFlag.EnvVar: strings.Replace(EncodePrivKey(d.Secrets.SequencerP2P).String(), "0x", "", 1)}.Params(),
+			HiveUnpackParams{opnf.SequencerP2PKeyFlag.EnvVars[0]: strings.Replace(EncodePrivKey(d.Secrets.SequencerP2P).String(), "0x", "", 1)}.Params(),
 		)
 	}
 
@@ -252,17 +252,17 @@ func (d *Devnet) AddOpProposer(eth1Index int, l2EngIndex int, opNodeIndex int, o
 	opNode := d.GetOpNode(opNodeIndex)
 
 	defaultSettings := HiveUnpackParams{
-		oppf.L1EthRpcFlag.EnvVar:                  eth1Node.WsRpcEndpoint(),
-		oppf.RollupRpcFlag.EnvVar:                 opNode.HttpRpcEndpoint(),
-		oppf.L2OOAddressFlag.EnvVar:               d.Deployments.L2OutputOracleProxy.String(),
-		oppf.PollIntervalFlag.EnvVar:              "10s",
-		oppf.NumConfirmationsFlag.EnvVar:          "1",
-		oppf.SafeAbortNonceTooLowCountFlag.EnvVar: "3",
-		oppf.ResubmissionTimeoutFlag.EnvVar:       "30s",
-		oppf.MnemonicFlag.EnvVar:                  d.MnemonicCfg.Mnemonic,
-		oppf.L2OutputHDPathFlag.EnvVar:            d.MnemonicCfg.Proposer,
-		oppf.AllowNonFinalizedFlag.EnvVar:         "true",
-		"OP_PROPOSER_LOG_LEVEL":                   "debug",
+		oppf.L1EthRpcFlag.EnvVars[0]:                 eth1Node.WsRpcEndpoint(),
+		oppf.RollupRpcFlag.EnvVars[0]:                opNode.HttpRpcEndpoint(),
+		oppf.L2OOAddressFlag.EnvVars[0]:              d.Deployments.L2OutputOracleProxy.String(),
+		oppf.PollIntervalFlag.EnvVars[0]:             "10s",
+		"OP_PROPOSER_NUM_CONFIRMATIONS":              "1",
+		"OP_PROPOSER_SAFE_ABORT_NONCE_TOO_LOW_COUNT": "3",
+		"OP_PROPOSER_RESUBMISSION_TIMEOUT":           "30s",
+		"OP_PROPOSER_MNEMONIC":                       d.MnemonicCfg.Mnemonic,
+		oppf.L2OutputHDPathFlag.EnvVars[0]:           d.MnemonicCfg.Proposer,
+		oppf.AllowNonFinalizedFlag.EnvVars[0]:        "true",
+		"OP_PROPOSER_LOG_LEVEL":                      "debug",
 	}
 	input := []hivesim.StartOption{defaultSettings.Params()}
 	input = append(input, opts...)
@@ -290,19 +290,19 @@ func (d *Devnet) AddOpBatcher(eth1Index int, l2EngIndex int, opNodeIndex int, op
 	l2Engine := d.GetOpL2Engine(l2EngIndex)
 
 	defaultSettings := HiveUnpackParams{
-		opbf.L1EthRpcFlag.EnvVar:                  eth1Node.WsRpcEndpoint(),
-		opbf.L2EthRpcFlag.EnvVar:                  l2Engine.WsRpcEndpoint(),
-		opbf.RollupRpcFlag.EnvVar:                 opNode.HttpRpcEndpoint(),
-		opbf.TargetL1TxSizeBytesFlag.EnvVar:       "624",
-		opbf.MaxL1TxSizeBytesFlag.EnvVar:          "120000",
-		opbf.SubSafetyMarginFlag.EnvVar:           "4",
-		opbf.PollIntervalFlag.EnvVar:              "1s",
-		opbf.NumConfirmationsFlag.EnvVar:          "1",
-		opbf.SafeAbortNonceTooLowCountFlag.EnvVar: "3",
-		opbf.ResubmissionTimeoutFlag.EnvVar:       "30s",
-		opbf.MnemonicFlag.EnvVar:                  d.MnemonicCfg.Mnemonic,
-		opbf.SequencerHDPathFlag.EnvVar:           d.MnemonicCfg.Batcher,
-		"OP_BATCHER_LOG_LEVEL":                    "debug",
+		opbf.L1EthRpcFlag.EnvVars[0]:                eth1Node.WsRpcEndpoint(),
+		opbf.L2EthRpcFlag.EnvVars[0]:                l2Engine.WsRpcEndpoint(),
+		opbf.RollupRpcFlag.EnvVars[0]:               opNode.HttpRpcEndpoint(),
+		"OP_BATCHER_TARGET_L1_TX_SIZE_BYTES":        "624",
+		opbf.MaxL1TxSizeBytesFlag.EnvVars[0]:        "120000",
+		opbf.SubSafetyMarginFlag.EnvVars[0]:         "4",
+		opbf.PollIntervalFlag.EnvVars[0]:            "1s",
+		"OP_BATCHER_NUM_CONFIRMATIONS":              "1",
+		"OP_BATCHER_SAFE_ABORT_NONCE_TOO_LOW_COUNT": "3",
+		"OP_BATCHER_RESUBMISSION_TIMEOUT":           "30s",
+		"OP_BATCHER_MNEMONIC":                       d.MnemonicCfg.Mnemonic,
+		opbf.SequencerHDPathFlag.EnvVars[0]:         d.MnemonicCfg.Batcher,
+		"OP_BATCHER_LOG_LEVEL":                      "debug",
 	}
 	input := []hivesim.StartOption{defaultSettings.Params()}
 	input = append(input, opts...)
@@ -377,7 +377,7 @@ func (d *Devnet) RunScript(name string, command ...string) *hivesim.ExecInfo {
 	return execInfo
 }
 
-func (d *Devnet) InitChain(maxSeqDrift uint64, seqWindowSize uint64, chanTimeout uint64, additionalAlloc core.GenesisAlloc, forkName string) {
+func (d *Devnet) InitChain(maxSeqDrift uint64, seqWindowSize uint64, chanTimeout uint64, additionalAlloc core.GenesisAlloc, l1BlockTime uint64, forkName string) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	d.T.Log("creating hardhat deploy config")
@@ -414,7 +414,7 @@ func (d *Devnet) InitChain(maxSeqDrift uint64, seqWindowSize uint64, chanTimeout
 		L2OutputOracleProposer:           d.Addresses.Proposer,
 		L2OutputOracleChallenger:         common.Address{}, // tbd
 
-		L1BlockTime:                 15,
+		L1BlockTime:                 l1BlockTime,
 		L1GenesisBlockNonce:         0,
 		CliqueSignerAddress:         d.Addresses.CliqueSigner,
 		L1GenesisBlockTimestamp:     hexutil.Uint64(time.Now().Unix()),
@@ -428,7 +428,7 @@ func (d *Devnet) InitChain(maxSeqDrift uint64, seqWindowSize uint64, chanTimeout
 		L1GenesisBlockBaseFeePerGas: uint642big(1000_000_000), // 1 gwei
 
 		L2GenesisBlockNonce:         0,
-		L2GenesisBlockGasLimit:      15_000_000,
+		L2GenesisBlockGasLimit:      30_000_000,
 		L2GenesisBlockDifficulty:    uint642big(0),
 		L2GenesisBlockMixHash:       common.Hash{},
 		L2GenesisBlockNumber:        0,
@@ -436,8 +436,16 @@ func (d *Devnet) InitChain(maxSeqDrift uint64, seqWindowSize uint64, chanTimeout
 		L2GenesisBlockParentHash:    common.Hash{},
 		L2GenesisBlockBaseFeePerGas: uint642big(1000_000_000),
 
-		GasPriceOracleOverhead:      2100,
-		GasPriceOracleScalar:        1000_000,
+		GasPriceOracleOverhead: 2100,
+		GasPriceOracleScalar:   1000_000,
+
+		BaseFeeVaultMinimumWithdrawalAmount:      uint642big(1000_000_000), // 1 gwei
+		L1FeeVaultMinimumWithdrawalAmount:        uint642big(1000_000_000), // 1 gwei
+		SequencerFeeVaultMinimumWithdrawalAmount: uint642big(1000_000_000), // 1 gwei
+		BaseFeeVaultWithdrawalNetwork:            uint8(1),                 // L2 withdrawal network
+		L1FeeVaultWithdrawalNetwork:              uint8(1),                 // L2 withdrawal network
+		SequencerFeeVaultWithdrawalNetwork:       uint8(1),                 // L2 withdrawal network
+
 		DeploymentWaitConfirmations: 1,
 
 		EIP1559Elasticity:  10,
@@ -460,7 +468,7 @@ func (d *Devnet) InitChain(maxSeqDrift uint64, seqWindowSize uint64, chanTimeout
 	d.L1Cfg = l1Genesis
 
 	l1Block := l1Genesis.ToBlock()
-	l2Genesis, err := genesis.BuildL2DeveloperGenesis(config, l1Block)
+	l2Genesis, err := genesis.BuildL2Genesis(config, l1Block)
 	if err != nil {
 		d.T.Fatalf("failed to create l2 genesis: %v", err)
 	}
@@ -527,7 +535,7 @@ type SequencerDevnetParams struct {
 }
 
 func StartSequencerDevnet(ctx context.Context, d *Devnet, params *SequencerDevnetParams) error {
-	d.InitChain(params.MaxSeqDrift, params.SeqWindowSize, params.ChanTimeout, params.AdditionalGenesisAllocs, params.Fork)
+	d.InitChain(params.MaxSeqDrift, params.SeqWindowSize, params.ChanTimeout, params.AdditionalGenesisAllocs, 6, params.Fork)
 	d.AddEth1()
 	d.WaitUpEth1(0, time.Second*10)
 	d.AddOpL2()
