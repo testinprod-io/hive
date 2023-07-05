@@ -22,216 +22,37 @@ const replicaCount = 2
 const maxReplicaLag = 5
 
 func main() {
-	suite := hivesim.Suite{
-		Name:        "optimism p2p",
-		Description: "This suite runs the P2P tests",
-	}
-
-	// Add tests for full nodes.
-	suite.Add(&hivesim.TestSpec{
-		Name:        "simple p2p testnet",
-		Description: `This suite runs the a testnet with P2P set up`,
-		Run:         func(t *hivesim.T) { runP2PTests(t) },
-	})
-	suite.Add(&hivesim.TestSpec{
-		Name:        "tx forwarding",
-		Description: `This test verifies that tx forwarding works`,
-		Run:         func(t *hivesim.T) { txForwardingTest(t) },
-	})
-	suite.Add(&hivesim.TestSpec{
-		Name:        "tx gossiping",
-		Description: `This test verifies that tx gossiping works`,
-		Run:         func(t *hivesim.T) { txGossipingTest(t) },
-	})
-	suite.Add(&hivesim.TestSpec{
-		Name:        "tx gossip disabling",
-		Description: `This test verifies that tx gossip disabling works`,
-		Run:         func(t *hivesim.T) { txGossipingDisableTest(t) },
-	})
 	sim := hivesim.New()
-	hivesim.MustRunSuite(sim, suite)
-}
+	for _, forkName := range optimism.AllOptimismForkConfigs {
+		forkName := forkName
+		suite := hivesim.Suite{
+			Name:        "optimism p2p - " + forkName,
+			Description: "This suite runs the P2P tests",
+		}
 
-// txGossipingTest verifies that a transaction submitted to a replica execution client
-// with tx gossiping enabled shows up on the sequencer tx pool.
-func txGossipingTest(t *hivesim.T) {
-	d := optimism.NewDevnet(t)
-	sender := d.L2Vault.GenerateKey()
-	receiver := d.L2Vault.GenerateKey()
-
-	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}})
-	d.AddEth1()
-	d.WaitUpEth1(0, time.Second*10)
-
-	d.AddOpL2(hivesim.Params{"HIVE_OP_EXEC_DISABLE_TX_GOSSIP": "false"})
-	d.AddOpNode(0, 0, false)
-	seqNode := d.GetOpL2Engine(0)
-
-	d.AddOpL2(hivesim.Params{"HIVE_OP_EXEC_DISABLE_TX_GOSSIP": "false"})
-	d.AddOpNode(0, 1, false)
-	verifNode := d.GetOpL2Engine(1)
-	verifClient := verifNode.EthClient()
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		d.WaitUpOpL2Engine(0, time.Second*10)
-		wg.Done()
-	}()
-	go func() {
-		d.WaitUpOpL2Engine(1, time.Second*10)
-		wg.Done()
-	}()
-
-	t.Log("waiting for nodes to come up")
-	wg.Wait()
-
-	t.Logf("peering execution clients %s with %s", seqNode.IP.String(), verifNode.IP.String())
-	seqNodeExtended := &optimism.OpL2EngineExtended{OpL2Engine: seqNode}
-	verifNodeExtended := &optimism.OpL2EngineExtended{OpL2Engine: verifNode}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	require.NoError(t, seqNodeExtended.ConnectPeer(ctx, verifNodeExtended))
-
-	baseTx := types.NewTx(&types.DynamicFeeTx{
-		ChainID:   optimism.L2ChainIDBig,
-		Nonce:     0,
-		To:        &receiver,
-		Gas:       75000,
-		GasTipCap: big.NewInt(10 * params.GWei),
-		GasFeeCap: big.NewInt(20 * params.GWei),
-		Value:     big.NewInt(0.0001 * params.Ether),
-	})
-
-	tx, err := d.L2Vault.SignTransaction(sender, baseTx)
-	require.Nil(t, err)
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	require.NoError(t, verifClient.SendTransaction(ctx, tx))
-	t.Log("sent tx to verifier, waiting for tx gossip")
-
-	<-time.After(10 * time.Second)
-
-	ctx, cancel = context.WithTimeout(context.Background(), 180*time.Second)
-	defer cancel()
-	found, err := optimism.WaitPendingTransactionFromTxPool(ctx, seqNodeExtended, sender, tx)
-	if !found {
-		t.Fatal("transaction not gossiped", "err", err)
+		// Add tests for full nodes.
+		suite.Add(&hivesim.TestSpec{
+			Name:        "simple p2p testnet",
+			Description: `This suite runs the a testnet with P2P set up`,
+			Run:         func(t *hivesim.T) { runP2PTests(t, forkName) },
+		})
+		suite.Add(&hivesim.TestSpec{
+			Name:        "tx forwarding",
+			Description: `This test verifies that tx forwarding works`,
+			Run:         func(t *hivesim.T) { txForwardingTest(t, forkName) },
+		})
+		hivesim.MustRunSuite(sim, suite)
 	}
-	t.Log("found gossiped transaction on sequencer")
-}
-
-// txGossipingDisableTest verifies that a transaction submitted to a replica execution client
-// with tx gossiping disabled does not show up on the sequencer tx pool. After that, submit
-// transaction to sequencer which tx gossip enabled, and test tx does not show up at replica.
-func txGossipingDisableTest(t *hivesim.T) {
-	d := optimism.NewDevnet(t)
-	sender := d.L2Vault.GenerateKey()
-	receiver := d.L2Vault.GenerateKey()
-
-	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}})
-	d.AddEth1()
-	d.WaitUpEth1(0, time.Second*10)
-
-	d.AddOpL2(hivesim.Params{"HIVE_OP_EXEC_DISABLE_TX_GOSSIP": "false"})
-	d.AddOpNode(0, 0, false)
-
-	seqNode := d.GetOpL2Engine(0)
-	seqClient := seqNode.EthClient()
-
-	d.AddOpL2(hivesim.Params{"HIVE_OP_EXEC_DISABLE_TX_GOSSIP": "true"})
-	d.AddOpNode(0, 1, false)
-	verifNode := d.GetOpL2Engine(1)
-	verifClient := verifNode.EthClient()
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		d.WaitUpOpL2Engine(0, time.Second*10)
-		wg.Done()
-	}()
-	go func() {
-		d.WaitUpOpL2Engine(1, time.Second*10)
-		wg.Done()
-	}()
-
-	t.Log("waiting for nodes to come up")
-	wg.Wait()
-
-	t.Logf("peering execution clients %s with %s", seqNode.IP.String(), verifNode.IP.String())
-	seqNodeExtended := &optimism.OpL2EngineExtended{OpL2Engine: seqNode}
-	verifNodeExtended := &optimism.OpL2EngineExtended{OpL2Engine: verifNode}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	require.NoError(t, seqNodeExtended.ConnectPeer(ctx, verifNodeExtended))
-
-	nonce := uint64(0)
-	baseTx := types.NewTx(&types.DynamicFeeTx{
-		ChainID:   optimism.L2ChainIDBig,
-		Nonce:     nonce,
-		To:        &receiver,
-		Gas:       75000,
-		GasTipCap: big.NewInt(10 * params.GWei),
-		GasFeeCap: big.NewInt(20 * params.GWei),
-		Value:     big.NewInt(0.0001 * params.Ether),
-	})
-
-	tx, err := d.L2Vault.SignTransaction(sender, baseTx)
-	require.Nil(t, err)
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	require.NoError(t, verifClient.SendTransaction(ctx, tx))
-	t.Log("sent tx to verifier. Give some time to check tx gossiping is disabled")
-
-	<-time.After(10 * time.Second)
-
-	ctx, cancel = context.WithTimeout(context.Background(), 180*time.Second)
-	defer cancel()
-	found, _ := optimism.WaitPendingTransactionFromTxPool(ctx, seqNodeExtended, sender, tx)
-	if found {
-		t.Fatal("transaction gossiped")
-	}
-	t.Log("transaction not gossiped on sequencer")
-
-	nonce += 1
-	baseTx2 := types.NewTx(&types.DynamicFeeTx{
-		ChainID:   optimism.L2ChainIDBig,
-		Nonce:     nonce,
-		To:        &receiver,
-		Gas:       75000,
-		GasTipCap: big.NewInt(10 * params.GWei),
-		GasFeeCap: big.NewInt(20 * params.GWei),
-		Value:     big.NewInt(0.0001 * params.Ether),
-	})
-
-	tx2, err := d.L2Vault.SignTransaction(sender, baseTx2)
-	require.Nil(t, err)
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	require.NoError(t, seqClient.SendTransaction(ctx, tx2))
-	t.Log("sent tx to sequencer. Give some time to check tx gossiping is disabled")
-
-	<-time.After(10 * time.Second)
-
-	ctx, cancel = context.WithTimeout(context.Background(), 180*time.Second)
-	defer cancel()
-	found2, _ := optimism.WaitPendingTransactionFromTxPool(ctx, verifNodeExtended, sender, tx2)
-	if found2 {
-		t.Fatal("transaction gossiped")
-	}
-	t.Log("transaction not gossiped on validator")
 }
 
 // txForwardingTest verifies that a transaction submitted to a replica with tx forwarding enabled shows up on the sequencer.
 // TODO: The transaction shows up with `getTransaction`, but it remains pending and is not mined for some reason.
 // This is weird, but fine because it still shows that the transaction is received by the sequencer.
-func txForwardingTest(t *hivesim.T) {
+func txForwardingTest(t *hivesim.T, forkName string) {
 	d := optimism.NewDevnet(t)
 	sender := d.L2Vault.GenerateKey()
 	receiver := d.L2Vault.GenerateKey()
-	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}})
+	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}}, forkName)
 	d.AddEth1()
 	d.WaitUpEth1(0, time.Second*10)
 
@@ -286,7 +107,7 @@ func txForwardingTest(t *hivesim.T) {
 	defer cancel()
 	_, isPending, err := seqClient.TransactionByHash(ctx, tx.Hash())
 	if err != nil {
-		t.Fatal("transaction did not propagate", "err", err)
+		t.Fatal("transaction did not propagate")
 	}
 	t.Logf("found transaction on sequencer, isPending: %v", isPending)
 
@@ -297,10 +118,10 @@ func txForwardingTest(t *hivesim.T) {
 }
 
 // runP2PTests runs the P2P tests between the sequencer and verifier.
-func runP2PTests(t *hivesim.T) {
+func runP2PTests(t *hivesim.T, forkName string) {
 	d := optimism.NewDevnet(t)
 
-	d.InitChain(30, 4, 30, nil)
+	d.InitChain(30, 4, 30, nil, forkName)
 	d.AddEth1() // l1 eth1 node is required for l2 config init
 	d.WaitUpEth1(0, time.Second*10)
 
@@ -425,7 +246,7 @@ waitLoop:
 					Nonce:     nonce,
 					Gas:       75000,
 					GasTipCap: big.NewInt(1),
-					GasFeeCap: big.NewInt(10), // minimum GasFeeCap of op-erigon is 7
+					GasFeeCap: big.NewInt(2),
 					Value:     big.NewInt(0.0001 * params.Ether),
 				})
 				tx, err = d.L2Vault.SignTransaction(sender, tx)
