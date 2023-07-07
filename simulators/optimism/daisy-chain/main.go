@@ -64,9 +64,9 @@ func runAllTests(tests []*optimism.TestSpec, fork string) func(t *hivesim.T) {
 		d := optimism.NewDevnet(t)
 		d.InitChain(120, 120, 30, nil, fork)
 		d.AddOpL2(hivesim.Params{
-			"HIVE_OP_GETH_USE_GOERLI_DATADIR": "true",
-			"HIVE_OP_GETH_SEQUENCER_HTTP":     GoerliSequencerRPC,
-			"HIVE_OP_GETH_HISTORICAL_RPC":     HistoricalSequencerRPC,
+			"HIVE_OP_ERIGON_USE_GOERLI_DATADIR": "true",
+			"HIVE_OP_GETH_SEQUENCER_HTTP":       GoerliSequencerRPC,
+			"HIVE_OP_GETH_HISTORICAL_RPC":       HistoricalSequencerRPC,
 		})
 		d.WaitUpOpL2Engine(0, time.Second*10)
 
