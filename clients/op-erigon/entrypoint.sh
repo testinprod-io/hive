@@ -42,6 +42,15 @@ fi
 if [ "$HIVE_OP_GETH_SEQUENCER_HTTP" != "" ]; then
     EXTRA_FLAGS="$EXTRA_FLAGS --rollup.sequencerhttp $HIVE_OP_GETH_SEQUENCER_HTTP"
 fi
+if [ "$HIVE_OP_GETH_HISTORICAL_RPC" != "" ]; then
+	EXTRA_FLAGS="$EXTRA_FLAGS --rollup.historicalrpc=$HIVE_OP_GETH_HISTORICAL_RPC"
+fi
+if [ "$HIVE_OP_ERIGON_USE_GOERLI_DATADIR" != "" ]; then
+    wget -c -O "/backup.tar.gz" https://op-erigon-backup.goerli.testinprod.io
+    mkdir /goerli-bedrock
+    tar -zxvf "/backup.tar.gz" -C /goerli-bedrock
+	ERIGON_DATA_DIR="/goerli-bedrock"
+fi
 set -u
 
 /usr/local/bin/erigon \

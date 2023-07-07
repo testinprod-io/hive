@@ -7,7 +7,7 @@ FROM testinprod/op-erigon:latest
 USER root
 
 # socat for routing websocket requests
-RUN apk add --update bash curl jq socat
+RUN apk add --update bash curl jq socat tar
 RUN apk add --no-cache ca-certificates
 RUN /usr/local/bin/erigon --version | sed -e 's/erigon version \(.*\)/\1/' > /version.txt
 
