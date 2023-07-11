@@ -117,7 +117,7 @@ func debugTraceBlockByNumberTest(t *hivesim.T, env *optimism.TestEnv) {
 		t,
 		env,
 		"debug_traceBlockByNumber",
-		func(opGethRes []*txTraceResult, histSeqRes []*txTraceResult) {
+		func(opGethRes interface{}, histSeqRes interface{}) {
 			// Compare the results
 			require.Equal(t, histSeqRes, opGethRes, "results from historical sequencer and op-geth do not match")
 		},
@@ -136,7 +136,7 @@ func debugTraceBlockByHashTest(t *hivesim.T, env *optimism.TestEnv) {
 		t,
 		env,
 		"debug_traceBlockByHash",
-		func(opGethRes []*txTraceResult, histSeqRes []*txTraceResult) {
+		func(opGethRes interface{}, histSeqRes interface{}) {
 			// Compare the results
 			require.Equal(t, histSeqRes, opGethRes, "results from historical sequencer and op-geth do not match")
 		},
@@ -155,7 +155,7 @@ func debugTraceTransactionTest(t *hivesim.T, env *optimism.TestEnv) {
 		t,
 		env,
 		"debug_traceTransaction",
-		func(opGethRes *txTraceResult, histSeqRes *txTraceResult) {
+		func(opGethRes interface{}, histSeqRes interface{}) {
 			// Compare the results
 			require.Equal(t, histSeqRes, opGethRes, "results from historical sequencer and op-geth do not match")
 		},
@@ -240,12 +240,6 @@ func ethEstimateGasTest(t *hivesim.T, env *optimism.TestEnv) {
 		},
 		tx, blockNumber,
 	)
-}
-
-// txTraceResult is the result of a single transaction trace.
-type txTraceResult struct {
-	Result interface{} `json:"result,omitempty"` // Trace results produced by the tracer
-	Error  string      `json:"error,omitempty"`  // Trace failure produced by the tracer
 }
 
 // getRandomHistoricalBlockHex returns a random historical block number.
