@@ -62,7 +62,7 @@ func txGossipingTest(t *hivesim.T, forkname string) {
 	sender := d.L2Vault.GenerateKey()
 	receiver := d.L2Vault.GenerateKey()
 
-	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}}, forkname)
+	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}}, 15, forkname)
 	d.AddEth1()
 	d.WaitUpEth1(0, time.Second*10)
 
@@ -133,7 +133,7 @@ func txGossipingDisableTest(t *hivesim.T, forkName string) {
 	sender := d.L2Vault.GenerateKey()
 	receiver := d.L2Vault.GenerateKey()
 
-	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}}, forkName)
+	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}}, 15, forkName)
 	d.AddEth1()
 	d.WaitUpEth1(0, time.Second*10)
 
