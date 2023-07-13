@@ -117,7 +117,7 @@ workflows:
       - run-hive-sim:
           name: hive-test-daisy-chain
           requires: [ "build" ]
-          context: slack
+          context: slack-hive
           sim: optimism/daisy-chain
   scheduled:
     triggers:
