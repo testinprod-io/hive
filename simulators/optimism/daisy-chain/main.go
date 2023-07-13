@@ -110,8 +110,8 @@ func checkCallEquivalence[K any](
 
 // Tests that a daisy-chained debug_traceBlockByNumber call to `op-geth` works as expected.
 func debugTraceBlockByNumberTest(t *hivesim.T, env *optimism.TestEnv) {
-	// Grab a random historical block
-	blockNumber := getRandomHistoricalBlockHex()
+	// Grab a historical block
+	blockNumber := getHistoricalBlockHex()
 
 	checkCallEquivalence(
 		t,
@@ -127,8 +127,8 @@ func debugTraceBlockByNumberTest(t *hivesim.T, env *optimism.TestEnv) {
 
 // Tests that a daisy-chained debug_traceBlockByHash call to `op-geth` works as expected.
 func debugTraceBlockByHashTest(t *hivesim.T, env *optimism.TestEnv) {
-	// Grab a blockhash at a random block that is within the historical window.
-	block, err := env.Devnet.GetOpL2Engine(0).EthClient().BlockByNumber(env.Ctx(), getRandomHistoricalBlockNr())
+	// Grab a blockhash at a block that is within the historical window.
+	block, err := env.Devnet.GetOpL2Engine(0).EthClient().BlockByNumber(env.Ctx(), getHistoricalBlockNr())
 	require.NoError(t, err, "failed to get block by number")
 	blockHash := block.Hash()
 
@@ -146,8 +146,8 @@ func debugTraceBlockByHashTest(t *hivesim.T, env *optimism.TestEnv) {
 
 // Tests that a daisy-chained debug_traceTransaction call to `op-geth` works as expected.
 func debugTraceTransactionTest(t *hivesim.T, env *optimism.TestEnv) {
-	// Grab a transaction hash at a random block that is within the historical window.
-	block, err := env.Devnet.GetOpL2Engine(0).EthClient().BlockByNumber(env.Ctx(), getRandomHistoricalBlockNr())
+	// Grab a transaction hash at a block that is within the historical window.
+	block, err := env.Devnet.GetOpL2Engine(0).EthClient().BlockByNumber(env.Ctx(), getHistoricalBlockNr())
 	require.NoError(t, err, "failed to get block by number")
 	txHash := block.Transactions()[0].Hash()
 
@@ -167,7 +167,7 @@ func debugTraceTransactionTest(t *hivesim.T, env *optimism.TestEnv) {
 func debugTraceCallTest(t *hivesim.T, env *optimism.TestEnv) {
 	// Grab the result of the trace call from op-geth. This request should be daisy-chained.
 	opGeth := env.Devnet.GetOpL2Engine(0).RPC()
-	err := opGeth.CallContext(env.Ctx(), nil, "debug_traceCall", make(map[string]interface{}), getRandomHistoricalBlockHex())
+	err := opGeth.CallContext(env.Ctx(), nil, "debug_traceCall", make(map[string]interface{}), getHistoricalBlockHex())
 	// The debug_traceCall method should not be implemented in op-geth's RPC.
 	require.Error(t, err, "debug_traceCall should not be implemented in op-geth")
 	require.Equal(t, err.Error(), "l2geth does not have a debug_traceCall method", "debug_traceCall should not be implemented in op-geth")
@@ -176,7 +176,7 @@ func debugTraceCallTest(t *hivesim.T, env *optimism.TestEnv) {
 	// should also be an error, but a different one.
 	histSeq, err := rpc.DialHTTP(HistoricalSequencerRPC)
 	require.NoError(t, err, "failed to dial historical sequencer RPC")
-	err = histSeq.CallContext(env.Ctx(), nil, "debug_traceCall", make(map[string]interface{}), getRandomHistoricalBlockHex())
+	err = histSeq.CallContext(env.Ctx(), nil, "debug_traceCall", make(map[string]interface{}), getHistoricalBlockHex())
 	require.Error(t, err, "debug_traceCall should not be implemented in op-geth")
 	require.Equal(t, err.Error(), "the method debug_traceCall does not exist/is not available", "debug_traceCall should not be implemented in op-geth")
 }
@@ -185,7 +185,7 @@ func debugTraceCallTest(t *hivesim.T, env *optimism.TestEnv) {
 func ethCallTest(t *hivesim.T, env *optimism.TestEnv) {
 	// Craft the payload to send to eth_call.
 	tx := types.NewTransaction(0, MockAddr, big.NewInt(0), 100_000, big.NewInt(0), []byte{})
-	blockNumber := getRandomHistoricalBlockHex()
+	blockNumber := getHistoricalBlockHex()
 	stateOverride := make(map[string]interface{})
 	// Store a simple contract @ 0xdeadbeef that returns its own balance (1 ether).
 	stateOverride[MockAddr.String()] =
@@ -227,7 +227,7 @@ func ethEstimateGasTest(t *hivesim.T, env *optimism.TestEnv) {
 	_, err := rand.Read(payload)
 	require.NoError(t, err, "failed to generate random payload")
 	tx := types.NewTransaction(0, IDPrecompile, big.NewInt(0), 100_000, big.NewInt(0), payload)
-	blockNumber := getRandomHistoricalBlockHex()
+	blockNumber := getHistoricalBlockHex()
 
 	checkCallEquivalence(
 		t,
@@ -242,14 +242,12 @@ func ethEstimateGasTest(t *hivesim.T, env *optimism.TestEnv) {
 	)
 }
 
-// getRandomHistoricalBlockHex returns a random historical block number.
-// Historical blocks on goerli exist in the range [1, 4061224)
-func getRandomHistoricalBlockNr() *big.Int {
-	return new(big.Int).SetUint64(uint64(rand.Intn(4061223) + 1))
+// getHistoricalBlockHex returns a historical block number.
+func getHistoricalBlockNr() *big.Int {
+	return big.NewInt(4061223)
 }
 
-// getRandomHistoricalBlockHex returns a random historical block number in hex.
-// Historical blocks on goerli exist in the range [1, 4061224)
-func getRandomHistoricalBlockHex() string {
-	return hexutil.EncodeBig(getRandomHistoricalBlockNr())
+// getHistoricalBlockHex returns a historical block number in hex.
+func getHistoricalBlockHex() string {
+	return hexutil.EncodeBig(getHistoricalBlockNr())
 }
