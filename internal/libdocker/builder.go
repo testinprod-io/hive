@@ -96,7 +96,7 @@ func (b *Builder) BuildImage(ctx context.Context, name string, fsys fs.FS) error
 		Context:      ctx,
 		Name:         name,
 		InputStream:  pipeR,
-		OutputStream: ioutil.Discard,
+		OutputStream: os.Stdout,
 		NoCache:      nocache,
 		Pull:         b.config.PullEnabled,
 	}
@@ -230,7 +230,7 @@ func (b *Builder) buildImage(ctx context.Context, contextDir, dockerFile, branch
 		Context:      ctx,
 		Name:         imageTag,
 		ContextDir:   context,
-		OutputStream: ioutil.Discard,
+		OutputStream: os.Stdout,
 		Dockerfile:   dockerFile,
 		NoCache:      nocache,
 		Pull:         b.config.PullEnabled,

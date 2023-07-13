@@ -262,7 +262,7 @@ func writeChain(chain *core.BlockChain, filename string, start uint64, modifyBlo
 		return err
 	}
 	defer out.Close()
-	return exportN(chain, out, start, chain.CurrentBlock().NumberU64(), modifyBlock)
+	return exportN(chain, out, start, chain.CurrentBlock().Number.Uint64(), modifyBlock)
 }
 
 // instaSeal wraps a consensus engine with instant block sealing. When a block is produced

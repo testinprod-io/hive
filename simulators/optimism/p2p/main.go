@@ -234,7 +234,7 @@ func txForwardingTest(t *hivesim.T, forkName string) {
 	d := optimism.NewDevnet(t)
 	sender := d.L2Vault.GenerateKey()
 	receiver := d.L2Vault.GenerateKey()
-	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}}, forkName)
+	d.InitChain(30, 4, 30, core.GenesisAlloc{sender: {Balance: big.NewInt(params.Ether)}}, 15, forkName)
 	d.AddEth1()
 	d.WaitUpEth1(0, time.Second*10)
 
@@ -303,7 +303,7 @@ func txForwardingTest(t *hivesim.T, forkName string) {
 func runP2PTests(t *hivesim.T, forkName string) {
 	d := optimism.NewDevnet(t)
 
-	d.InitChain(30, 4, 30, nil, forkName)
+	d.InitChain(30, 4, 30, nil, 15, forkName)
 	d.AddEth1() // l1 eth1 node is required for l2 config init
 	d.WaitUpEth1(0, time.Second*10)
 
