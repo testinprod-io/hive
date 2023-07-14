@@ -62,7 +62,7 @@ func runAllTests(tests []*optimism.TestSpec, fork string) func(t *hivesim.T) {
 
 		// Spin up an op-geth node that has the daisy-chain flag enabled.
 		d := optimism.NewDevnet(t)
-		d.InitChain(120, 120, 30, nil, fork)
+		d.InitChain(120, 120, 30, nil, 6, fork)
 		d.AddOpL2(hivesim.Params{
 			"HIVE_OP_ERIGON_USE_GOERLI_DATADIR": "true",
 			"HIVE_OP_GETH_SEQUENCER_HTTP":       GoerliSequencerRPC,
