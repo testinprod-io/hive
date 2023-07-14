@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.18-alpine3.15 AS reqs
+FROM docker.io/library/golang:1.19-alpine3.15 AS reqs
 WORKDIR /app
 RUN apk add --no-cache build-base
 ADD go.mod .
