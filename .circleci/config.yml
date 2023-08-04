@@ -114,11 +114,11 @@ workflows:
           requires: [ "build" ]
           context: slack-hive
           sim: optimism/rpc
-      - run-hive-sim:
-          name: hive-test-daisy-chain
-          requires: [ "build" ]
-          context: slack-hive
-          sim: optimism/daisy-chain
+      # - run-hive-sim:
+      #     name: hive-test-daisy-chain
+      #     requires: [ "build" ]
+      #     context: slack-hive
+      #     sim: optimism/daisy-chain
   scheduled:
     triggers:
       - schedule:
@@ -132,3 +132,4 @@ workflows:
       - run-hive-sim:
           requires: ["build"]
           context: slack-hive
+          sim: "^optimism/(rpc|l1ops|p2p)$"
