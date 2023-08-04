@@ -33,6 +33,10 @@ jobs:
         type: string
         default: optimism
         description: Sims to run
+      client-timeout:
+        type: string
+        default: 360s
+        description: The timeout of waiting for clients
     steps:
       - checkout
       - attach_workspace: {at: "/tmp/build"}
@@ -40,6 +44,7 @@ jobs:
           command: |
             /tmp/build/hive \
             -sim=<<parameters.sim>> \
+            -client.checktimelimit=<<parameters.client-timeout>> \
             -sim.loglevel=5 \
             -docker.pull=true \
             -client=go-ethereum_v1.11.6,op-erigon,op-proposer_develop,op-batcher_develop,op-node_develop |& tee /tmp/build/hive.log
@@ -119,6 +124,7 @@ workflows:
           requires: [ "build" ]
           context: slack-hive
           sim: optimism/daisy-chain
+          client-timeout: 900s
   scheduled:
     triggers:
       - schedule:
@@ -132,3 +138,4 @@ workflows:
       - run-hive-sim:
           requires: ["build"]
           context: slack-hive
+          client-timeout: 900s
