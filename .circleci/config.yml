@@ -132,4 +132,4 @@ workflows:
       - run-hive-sim:
           requires: ["build"]
           context: slack-hive
-          sim: "^optimism/(rpc|l1ops|p2p)$"
+          sim: "'^optimism/(rpc|l1ops|p2p)$'"
