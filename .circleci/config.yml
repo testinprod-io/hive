@@ -100,20 +100,24 @@ workflows:
       - go-test
       - build
       - run-hive-sim:
-          name: hive-test-l1ops
           requires: ["build"]
           context: slack-hive
-          sim: optimism/l1ops
-      - run-hive-sim:
-          name: hive-test-p2p
-          requires: [ "build" ]
-          context: slack-hive
-          sim: optimism/p2p
-      - run-hive-sim:
-          name: hive-test-rpc
-          requires: [ "build" ]
-          context: slack-hive
-          sim: optimism/rpc
+          sim: "'^optimism/(rpc|l1ops|p2p)$'"
+      # - run-hive-sim:
+      #     name: hive-test-l1ops
+      #     requires: ["build"]
+      #     context: slack-hive
+      #     sim: optimism/l1ops
+      # - run-hive-sim:
+      #     name: hive-test-p2p
+      #     requires: [ "build" ]
+      #     context: slack-hive
+      #     sim: optimism/p2p
+      # - run-hive-sim:
+      #     name: hive-test-rpc
+      #     requires: [ "build" ]
+      #     context: slack-hive
+      #     sim: optimism/rpc
       # - run-hive-sim:
       #     name: hive-test-daisy-chain
       #     requires: [ "build" ]
