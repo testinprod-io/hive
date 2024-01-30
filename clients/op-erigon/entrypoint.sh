@@ -72,5 +72,6 @@ set -u
   --nat extip:`hostname -i` \
   --miner.gaslimit=$GAS_LIMIT \
   --networkid=$CHAIN_ID \
+  --db.size.limit=8TB \
   $EXTRA_FLAGS \
   "$@"
