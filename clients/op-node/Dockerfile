@@ -1,5 +1,4 @@
-ARG branch=develop
-FROM us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:$branch
+FROM us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:latest
 
 RUN apk add bash
 
