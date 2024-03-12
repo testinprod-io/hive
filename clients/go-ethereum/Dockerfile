@@ -4,8 +4,8 @@
 # produce a very minimalistic container that can be reused many times without
 # needing to constantly rebuild.
 
-ARG branch=latest
-FROM ethereum/client-go:$branch
+ARG version=v1.13.14
+FROM ethereum/client-go:$version
 
 RUN apk add --update bash curl jq
 
