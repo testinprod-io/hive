@@ -27,7 +27,7 @@ GAS_LIMIT=$(echo "obase=10; ibase=16; $GAS_LIMIT_HEX" | bc)
 # erigon ALWAYS sets websocket port equal to its http port: 8545,
 # while others(op-batcher) try to communicate with erigon via 8546.
 # To overcome this issue, proxy requests using socat
-socat tcp-l:8546,fork,reuseaddr tcp:127.0.0.1:8545 &
+#socat tcp-l:8546,fork,reuseaddr tcp:127.0.0.1:8545 &
 # avoid race
 sleep 1
 
