@@ -119,17 +119,3 @@ workflows:
       #     requires: [ "build" ]
       #     context: slack-hive
       #     sim: optimism/daisy-chain
-  scheduled:
-    triggers:
-      - schedule:
-          # run every 4 hours
-          cron: "0 0,4,8,12,16 * * *"
-          filters:
-            branches:
-              only: [ "op-erigon" ]
-    jobs:
-      - build
-      - run-hive-sim:
-          requires: ["build"]
-          context: slack-hive
-          sim: "'^optimism/(rpc|l1ops|p2p)$'"
